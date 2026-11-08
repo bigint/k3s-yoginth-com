@@ -1,0 +1,81 @@
+name: Deploy (k3s)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: k3s-yoginth-com-production
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/bigint/k3s-yoginth-com
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out release
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        id: image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          build-args: DEPLOYMENT_REVISION=${{ github.sha }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update k3s cluster (Argo CD)
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          K3S_DEPLOY_KEY: ${{ secrets.K3S_DEPLOY_KEY }}
+          SITE_FILE: sites/k3s-yoginth-com.yaml
+        run: |
+          latest=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [[ "$latest" != "$GITHUB_SHA" ]]; then
+            echo "Skipping superseded release $GITHUB_SHA"
+            exit 0
+          fi
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          install -d -m 0700 ~/.ssh
+          printf '%s\n' "$K3S_DEPLOY_KEY" > ~/.ssh/k3s && chmod 0600 ~/.ssh/k3s
+          echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/k3s -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+          git clone -q --depth 1 git@github.com:bigint/k3s.git "$RUNNER_TEMP/k3s"
+          cd "$RUNNER_TEMP/k3s"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3 4 5; do
+            sed -i "s|^image: .*|image: $IMAGE@$IMAGE_DIGEST|; s|^revision: .*|revision: $GITHUB_SHA|" "$SITE_FILE"
+            if git diff --quiet; then echo "Already at $IMAGE_DIGEST"; exit 0; fi
+            git commit -qam "deploy(k3s-yoginth-com): ${GITHUB_SHA::7}" -m "Image $IMAGE@$IMAGE_DIGEST from $GITHUB_REPOSITORY@$GITHUB_SHA"
+            if git push -q origin HEAD:main; then echo "Pushed $SITE_FILE -> $GITHUB_SHA"; exit 0; fi
+            git fetch -q --depth 1 origin main && git reset -q --hard origin/main
+            sleep $((attempt * 3))
+          done
+          echo "Could not push $SITE_FILE" >&2
+          exit 1
