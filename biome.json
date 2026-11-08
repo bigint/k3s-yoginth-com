@@ -1,0 +1,14 @@
+{
+  "files": {
+    "includes": [
+      "app/**/*.{css,ts,tsx}",
+      "lib/**/*.ts",
+      "proxy.ts",
+      "next.config.ts",
+      "*.json"
+    ]
+  },
+  "css": { "parser": { "tailwindDirectives": false } },
+  "formatter": { "indentStyle": "space" },
+  "javascript": { "formatter": { "trailingCommas": "none" } }
+}
