@@ -1,0 +1,47 @@
+/* Same type and colours as yoginth.com (bigint/website app/global.css). */
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #a02b57;
+  --color-accent-line: rgb(160 43 87 / 45%);
+  --color-heading: #241c2b;
+  --color-ink: #382e40;
+  --color-muted: #726579;
+  --color-selection: rgb(160 43 87 / 22%);
+  --color-site: #faf8fc;
+  --font-sans: var(--font-site), sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: only light;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    text-rendering: optimizeLegibility;
+  }
+
+  a {
+    color: var(--color-accent);
+    text-decoration-color: var(--color-accent-line);
+    text-decoration-line: underline;
+    text-underline-offset: 0.125rem;
+    touch-action: manipulation;
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  ::selection {
+    background: var(--color-selection);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    a:hover {
+      text-decoration-color: var(--color-accent);
+    }
+  }
+}

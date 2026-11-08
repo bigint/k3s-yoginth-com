@@ -5,10 +5,20 @@
       "lib/**/*.ts",
       "proxy.ts",
       "next.config.ts",
-      "*.json"
+      "*.{json,mjs}"
     ]
   },
-  "css": { "parser": { "tailwindDirectives": false } },
-  "formatter": { "indentStyle": "space" },
-  "javascript": { "formatter": { "trailingCommas": "none" } }
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "formatter": {
+    "indentStyle": "space"
+  },
+  "javascript": {
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  }
 }

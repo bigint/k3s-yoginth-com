@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { getPeers, type Peer } from "@/lib/peers";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +8,10 @@ export const dynamic = "force-dynamic";
 const GIGABYTE = 1024 ** 3;
 const MEGABYTE = 1024 ** 2;
 
-function formatDuration(seconds: number): string {
+const sectionLabelClassName =
+  "text-[0.8125rem] font-semibold tracking-wide text-muted";
+
+const formatDuration = (seconds: number): string => {
   const days = Math.floor(seconds / 86_400);
   const hours = Math.floor((seconds % 86_400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -18,139 +22,167 @@ function formatDuration(seconds: number): string {
     return `${hours}h ${minutes}m`;
   }
   return `${minutes}m ${Math.floor(seconds % 60)}s`;
+};
+
+const formatGigabytes = (bytes: number): string =>
+  `${(bytes / GIGABYTE).toFixed(1)} GiB`;
+
+const formatMegabytes = (bytes: number): string =>
+  `${Math.round(bytes / MEGABYTE)} MiB`;
+
+interface RowProps {
+  label: string;
+  value: ReactNode;
 }
 
-function formatGigabytes(bytes: number): string {
-  return `${(bytes / GIGABYTE).toFixed(1)} GiB`;
-}
-
-function formatMegabytes(bytes: number): string {
-  return `${Math.round(bytes / MEGABYTE)} MiB`;
-}
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
+const Row = ({ label, value }: RowProps) => {
   return (
-    <div className="row">
-      <dt>{label}</dt>
-      <dd>{value}</dd>
+    <div className="flex flex-wrap justify-between gap-x-6 border-t border-muted/20 py-2 first:border-t-0">
+      <dt className="text-muted">{label}</dt>
+      <dd className="min-w-0 wrap-anywhere tabular-nums">{value}</dd>
     </div>
   );
+};
+
+interface GroupProps {
+  children: ReactNode;
+  title: string;
 }
 
-function Details({ peer }: { peer: Peer }) {
+const Group = ({ children, title }: GroupProps) => {
+  return (
+    <section className="mt-10">
+      <h2 className={sectionLabelClassName}>{title}</h2>
+      <dl className="mt-2">{children}</dl>
+    </section>
+  );
+};
+
+interface DetailsProps {
+  peer: Peer;
+}
+
+const Details = ({ peer }: DetailsProps) => {
   const { info } = peer;
   const used = info.memory.systemTotal - info.memory.systemFree;
   const limit = info.memory.processLimit;
 
   return (
-    <div className="grid">
-      <section>
-        <h2>Node</h2>
-        <dl>
-          <Row label="Name" value={info.node} />
-          <Row label="Location" value={info.location ?? "Unknown"} />
-          <Row label="Uptime" value={formatDuration(info.uptime.system)} />
-          <Row label="CPU" value={`${info.cpuCount} × ${info.cpuModel}`} />
-          <Row
-            label="Load (1, 5, 15 min)"
-            value={info.loadAverage.map((load) => load.toFixed(2)).join(", ")}
-          />
-          <Row
-            label="Memory"
-            value={`${formatGigabytes(used)} of ${formatGigabytes(info.memory.systemTotal)}`}
-          />
-        </dl>
-      </section>
-      <section>
-        <h2>Pod</h2>
-        <dl>
-          <Row label="Name" value={info.pod ?? "Unknown"} />
-          <Row label="Namespace" value={info.namespace ?? "Unknown"} />
-          <Row label="Pod IP" value={info.podIp ?? "Unknown"} />
-          <Row label="Uptime" value={formatDuration(info.uptime.process)} />
-          <Row
-            label="Memory"
-            value={`${formatMegabytes(info.memory.processUsed)}${limit ? ` of ${formatMegabytes(limit)}` : ""}`}
-          />
-        </dl>
-      </section>
-      <section>
-        <h2>App</h2>
-        <dl>
-          <Row
-            label="Revision"
-            value={
-              info.revision ? (
-                <a
-                  href={`https://github.com/bigint/k3s-yoginth-com/commit/${info.revision}`}
-                >
-                  {info.revision.slice(0, 7)}
-                </a>
-              ) : (
-                "Unknown"
-              )
-            }
-          />
-          <Row label="Node.js" value={info.nodeVersion} />
-          <Row label="Platform" value={`${info.platform} ${info.arch}`} />
-          <Row label="Node time" value={info.time} />
-        </dl>
-      </section>
-    </div>
+    <>
+      <Group title="Node">
+        <Row label="Name" value={info.node} />
+        <Row label="Location" value={info.location ?? "Unknown"} />
+        <Row label="Uptime" value={formatDuration(info.uptime.system)} />
+        <Row label="CPU" value={`${info.cpuCount} × ${info.cpuModel}`} />
+        <Row
+          label="Load (1, 5, 15 min)"
+          value={info.loadAverage.map((load) => load.toFixed(2)).join(", ")}
+        />
+        <Row
+          label="Memory"
+          value={`${formatGigabytes(used)} of ${formatGigabytes(info.memory.systemTotal)}`}
+        />
+      </Group>
+      <Group title="Pod">
+        <Row label="Name" value={info.pod ?? "Unknown"} />
+        <Row label="Namespace" value={info.namespace ?? "Unknown"} />
+        <Row label="Pod IP" value={info.podIp ?? "Unknown"} />
+        <Row label="Uptime" value={formatDuration(info.uptime.process)} />
+        <Row
+          label="Memory"
+          value={`${formatMegabytes(info.memory.processUsed)}${limit ? ` of ${formatMegabytes(limit)}` : ""}`}
+        />
+      </Group>
+      <Group title="App">
+        <Row
+          label="Revision"
+          value={
+            info.revision ? (
+              <a
+                href={`https://github.com/bigint/k3s-yoginth-com/commit/${info.revision}`}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                {info.revision.slice(0, 7)}
+              </a>
+            ) : (
+              "Unknown"
+            )
+          }
+        />
+        <Row label="Node.js" value={info.nodeVersion} />
+        <Row label="Platform" value={`${info.platform} ${info.arch}`} />
+        <Row label="Node time" value={info.time} />
+      </Group>
+    </>
   );
+};
+
+interface PageProps {
+  searchParams: Promise<{ node?: string | string[] }>;
 }
 
-export default async function Page({
-  searchParams
-}: {
-  searchParams: Promise<{ node?: string | string[] }>;
-}) {
+const Page = async ({ searchParams }: PageProps) => {
   const [{ node: requested }, requestHeaders, { peers, self, unreachable }] =
     await Promise.all([searchParams, headers(), getPeers()]);
 
-  const serving = self;
-  const selected =
-    peers.find((peer) => peer.info.node === requested) ?? serving;
-  const notFound =
+  const selected = peers.find((peer) => peer.info.node === requested) ?? self;
+  const isMissing =
     typeof requested === "string" && selected.info.node !== requested;
+  const isSelf = selected.info.node === self.info.node;
 
   const ray = requestHeaders.get("cf-ray");
   const edge = ray?.split("-").pop() ?? null;
   const country = requestHeaders.get("cf-ipcountry");
 
   return (
-    <main>
-      <p className="label">Cloudflare sent you to</p>
-      <h1>{serving.info.node}</h1>
-      <p className="note">
-        Cloudflare picks the nearest connector, so this usually stays the same.
-        Choose a node to see its details, fetched from it over the cluster
-        network.
-      </p>
+    <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-5">
+      <header className="mb-8">
+        <h1 className="text-base font-bold text-heading">k3s</h1>
+      </header>
 
-      <nav aria-label="Nodes">
-        {peers.map((peer) => (
-          <Link
-            aria-current={
-              peer.info.node === selected.info.node ? "page" : undefined
-            }
-            href={`/?node=${encodeURIComponent(peer.info.node)}`}
-            key={peer.info.node}
-            prefetch={false}
-          >
-            <span>{peer.info.node}</span>
-            <small>{peer.info.location ?? "Unknown location"}</small>
-          </Link>
-        ))}
-      </nav>
+      <div className="flex flex-col gap-5">
+        <p>
+          Cloudflare sent you to{" "}
+          <strong className="font-bold text-heading">{self.info.node}</strong>.
+          It picks the nearest connector, so this usually stays the same.
+        </p>
+        <p>
+          Choose a node below to see its details, fetched from it over the
+          cluster network.
+        </p>
+      </div>
 
-      {notFound ? (
-        <p className="warning">
-          That node isn't available, so this shows the serving node.
+      <section className="mt-10">
+        <h2 className={sectionLabelClassName}>Nodes</h2>
+        <nav aria-label="Nodes" className="mt-2">
+          {peers.map((peer) => {
+            const isCurrent = peer.info.node === selected.info.node;
+            return (
+              <Link
+                aria-current={isCurrent ? "page" : undefined}
+                className={`flex flex-wrap justify-between gap-x-6 border-t border-muted/20 py-2 no-underline first:border-t-0 ${isCurrent ? "font-bold text-heading" : ""}`}
+                href={`/?node=${encodeURIComponent(peer.info.node)}`}
+                key={peer.info.node}
+                prefetch={false}
+              >
+                <span>{peer.info.node}</span>
+                <span className="font-normal text-muted">
+                  {peer.info.location ?? "Unknown location"}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+      </section>
+
+      {isMissing ? (
+        <p className="mt-5 text-accent">
+          That node isn’t available, so this shows the serving node.
         </p>
       ) : null}
       {unreachable > 0 ? (
-        <p className="warning">
+        <p className="mt-5 text-accent">
           {unreachable === 1
             ? "1 pod did not respond"
             : `${unreachable} pods did not respond`}
@@ -158,26 +190,22 @@ export default async function Page({
         </p>
       ) : null}
 
-      <p className="status">
-        Showing <strong>{selected.info.node}</strong>
-        {selected.info.node === serving.info.node
+      <p className="mt-5 text-muted">
+        Showing {selected.info.node}
+        {isSelf
           ? ", the node serving this page."
-          : `, fetched by ${serving.info.node} in ${selected.latencyMs} ms.`}
+          : `, fetched by ${self.info.node} in ${selected.latencyMs} ms.`}
       </p>
 
       <Details peer={selected} />
 
-      <section className="wide">
-        <h2>Your request</h2>
-        <dl>
-          <Row
-            label="Cloudflare edge"
-            value={edge ?? "Not through Cloudflare"}
-          />
-          <Row label="Your country" value={country ?? "Unknown"} />
-          <Row label="Cloudflare ray" value={ray ?? "None"} />
-        </dl>
-      </section>
-    </main>
+      <Group title="Your request">
+        <Row label="Cloudflare edge" value={edge ?? "Not through Cloudflare"} />
+        <Row label="Your country" value={country ?? "Unknown"} />
+        <Row label="Cloudflare ray" value={ray ?? "None"} />
+      </Group>
+    </section>
   );
-}
+};
+
+export default Page;
