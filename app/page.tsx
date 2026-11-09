@@ -5,7 +5,6 @@ import { getPeers, type Peer } from "@/lib/peers";
 
 export const dynamic = "force-dynamic";
 
-const GIGABYTE = 1024 ** 3;
 const MEGABYTE = 1024 ** 2;
 
 const sectionLabelClassName =
@@ -23,9 +22,6 @@ const formatDuration = (seconds: number): string => {
   }
   return `${minutes}m ${Math.floor(seconds % 60)}s`;
 };
-
-const formatGigabytes = (bytes: number): string =>
-  `${(bytes / GIGABYTE).toFixed(1)} GiB`;
 
 const formatMegabytes = (bytes: number): string =>
   `${Math.round(bytes / MEGABYTE)} MiB`;
@@ -64,7 +60,6 @@ interface DetailsProps {
 
 const Details = ({ peer }: DetailsProps) => {
   const { info } = peer;
-  const used = info.memory.systemTotal - info.memory.systemFree;
   const limit = info.memory.processLimit;
 
   return (
@@ -72,16 +67,6 @@ const Details = ({ peer }: DetailsProps) => {
       <Group title="Node">
         <Row label="Name" value={info.node} />
         <Row label="Location" value={info.location ?? "Unknown"} />
-        <Row label="Uptime" value={formatDuration(info.uptime.system)} />
-        <Row label="CPU" value={`${info.cpuCount} × ${info.cpuModel}`} />
-        <Row
-          label="Load (1, 5, 15 min)"
-          value={info.loadAverage.map((load) => load.toFixed(2)).join(", ")}
-        />
-        <Row
-          label="Memory"
-          value={`${formatGigabytes(used)} of ${formatGigabytes(info.memory.systemTotal)}`}
-        />
       </Group>
       <Group title="App">
         <Row
