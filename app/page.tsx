@@ -83,16 +83,6 @@ const Details = ({ peer }: DetailsProps) => {
           value={`${formatGigabytes(used)} of ${formatGigabytes(info.memory.systemTotal)}`}
         />
       </Group>
-      <Group title="Pod">
-        <Row label="Name" value={info.pod ?? "Unknown"} />
-        <Row label="Namespace" value={info.namespace ?? "Unknown"} />
-        <Row label="Pod IP" value={info.podIp ?? "Unknown"} />
-        <Row label="Uptime" value={formatDuration(info.uptime.process)} />
-        <Row
-          label="Memory"
-          value={`${formatMegabytes(info.memory.processUsed)}${limit ? ` of ${formatMegabytes(limit)}` : ""}`}
-        />
-      </Group>
       <Group title="App">
         <Row
           label="Revision"
@@ -110,9 +100,11 @@ const Details = ({ peer }: DetailsProps) => {
             )
           }
         />
-        <Row label="Node.js" value={info.nodeVersion} />
-        <Row label="Platform" value={`${info.platform} ${info.arch}`} />
-        <Row label="Node time" value={info.time} />
+        <Row label="Uptime" value={formatDuration(info.uptime.process)} />
+        <Row
+          label="Memory"
+          value={`${formatMegabytes(info.memory.processUsed)}${limit ? ` of ${formatMegabytes(limit)}` : ""}`}
+        />
       </Group>
     </>
   );

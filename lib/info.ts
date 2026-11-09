@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import os from "node:os";
 
 export type NodeInfo = {
-  arch: string;
   cpuCount: number;
   cpuModel: string;
   loadAverage: number[];
@@ -13,25 +12,20 @@ export type NodeInfo = {
     systemFree: number;
     systemTotal: number;
   };
-  namespace: string | null;
   node: string;
-  nodeVersion: string;
-  platform: string;
-  pod: string | null;
-  podIp: string | null;
   revision: string | null;
-  time: string;
   uptime: {
     process: number;
     system: number;
   };
 };
 
-// Node names are public through x-served-by. Addresses are deliberately left
-// out: this page must not publish a node's public or tailnet IP.
+// /api/info and the page are public, so everything here is public. Node names
+// already are, through x-served-by. Addresses, pod and namespace names and the
+// exact runtime version are deliberately left out.
 const LOCATIONS: Record<string, string> = {
   "k3s-agfn-01": "Asia Giga Fibernet",
-  "k3s-home-01": "Home, Bengaluru",
+  "k3s-home-01": "Bengaluru, India",
   "k3s-hxc-01": "Mumbai, India",
   "k3s-ws-01": "Worldstream, Netherlands"
 };
@@ -51,7 +45,6 @@ export function getNodeInfo(): NodeInfo {
   const cpus = os.cpus();
 
   return {
-    arch: process.arch,
     cpuCount: cpus.length,
     cpuModel: cpus[0]?.model ?? "Unknown",
     loadAverage: os.loadavg(),
@@ -62,14 +55,8 @@ export function getNodeInfo(): NodeInfo {
       systemFree: os.freemem(),
       systemTotal: os.totalmem()
     },
-    namespace: process.env.POD_NAMESPACE ?? null,
     node,
-    nodeVersion: process.version,
-    platform: process.platform,
-    pod: process.env.POD_NAME ?? null,
-    podIp: process.env.POD_IP ?? null,
     revision: process.env.DEPLOYMENT_REVISION ?? null,
-    time: new Date().toISOString(),
     uptime: {
       process: process.uptime(),
       system: os.uptime()

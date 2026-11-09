@@ -11,8 +11,7 @@ const siteFont = Karla({
 
 export const metadata: Metadata = {
   description: "Shows which k3s node served this page.",
-  robots: { follow: false, index: false },
-  title: "k3s.yoginth.com"
+  title: "k3s | Yoginth"
 };
 
 export const viewport: Viewport = {
