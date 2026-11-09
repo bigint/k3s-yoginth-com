@@ -30,9 +30,9 @@ export type NodeInfo = {
 // Node names are public through x-served-by. Addresses are deliberately left
 // out: this page must not publish a node's public or tailnet IP.
 const LOCATIONS: Record<string, string> = {
-  "k3s-home-blr-01": "Home, Bengaluru",
-  "k3s-hxc-mum-01": "Mumbai, India",
-  "k3s-ws-nl-01": "Worldstream, Netherlands"
+  "k3s-home-01": "Home, Bengaluru",
+  "k3s-hxc-01": "Mumbai, India",
+  "k3s-ws-01": "Worldstream, Netherlands"
 };
 
 function memoryLimit(): number | null {
