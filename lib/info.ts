@@ -19,6 +19,7 @@ export type NodeInfo = {
 const LOCATIONS: Record<string, string> = {
   "k3s-agfn-01": "Asia Giga Fibernet",
   "k3s-home-01": "Bengaluru, India",
+  "k3s-ovh-01": "OVH, United States",
   "k3s-ws-01": "Worldstream, Netherlands"
 };
 
