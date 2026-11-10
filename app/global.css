@@ -2,19 +2,24 @@
 @import "tailwindcss";
 
 @theme {
-  --color-accent: #a02b57;
-  --color-accent-line: rgb(160 43 87 / 45%);
-  --color-heading: #241c2b;
-  --color-ink: #382e40;
-  --color-muted: #726579;
-  --color-selection: rgb(160 43 87 / 22%);
-  --color-site: #faf8fc;
-  --font-sans: var(--font-site), sans-serif;
+  --color-accent: #ededed;
+  --color-accent-line: rgb(255 255 255 / 10%);
+  --color-heading: #ededed;
+  --color-ink: #b5b5b5;
+  --color-link-hover: #7b7b7b;
+  --color-mark: #ffa7c4;
+  --color-muted: #8a8a8a;
+  --color-selection: rgb(255 255 255 / 20%);
+  --color-site: #101010;
+  --font-sans: var(--font-site), system-ui, sans-serif;
+  --font-weight-title: 550;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.625;
 }
 
 @layer base {
   html {
-    color-scheme: only light;
+    color-scheme: only dark;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -22,11 +27,17 @@
     text-rendering: optimizeLegibility;
   }
 
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+
   a {
     color: var(--color-accent);
-    text-decoration-color: var(--color-accent-line);
+    font-weight: 450;
+    text-decoration-color: transparent;
     text-decoration-line: underline;
-    text-underline-offset: 0.125rem;
+    text-underline-offset: 3px;
     touch-action: manipulation;
   }
 
@@ -41,7 +52,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     a:hover {
-      text-decoration-color: var(--color-accent);
+      text-decoration-color: var(--color-link-hover);
     }
   }
 }

@@ -7,8 +7,10 @@ export const dynamic = "force-dynamic";
 
 const MEGABYTE = 1024 ** 2;
 
-const sectionLabelClassName =
-  "text-[0.8125rem] font-semibold tracking-wide text-muted";
+const sectionHeadingClassName = "font-title text-heading";
+
+const rowClassName =
+  "flex flex-col items-start gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4";
 
 const formatDuration = (seconds: number): string => {
   const days = Math.floor(seconds / 86_400);
@@ -33,8 +35,8 @@ interface RowProps {
 
 const Row = ({ label, value }: RowProps) => {
   return (
-    <div className="flex flex-wrap justify-between gap-x-6 border-t border-muted/20 py-2 first:border-t-0">
-      <dt className="text-muted">{label}</dt>
+    <div className={rowClassName}>
+      <dt className="shrink-0 text-muted">{label}</dt>
       <dd className="min-w-0 wrap-anywhere tabular-nums">{value}</dd>
     </div>
   );
@@ -47,9 +49,9 @@ interface GroupProps {
 
 const Group = ({ children, title }: GroupProps) => {
   return (
-    <section className="mt-10">
-      <h2 className={sectionLabelClassName}>{title}</h2>
-      <dl className="mt-2">{children}</dl>
+    <section className="mt-12">
+      <h2 className={sectionHeadingClassName}>{title}</h2>
+      <dl className="mt-4 flex flex-col gap-5 sm:gap-4">{children}</dl>
     </section>
   );
 };
@@ -63,35 +65,29 @@ const Details = ({ peer }: DetailsProps) => {
   const limit = info.memory.processLimit;
 
   return (
-    <>
-      <Group title="Node">
-        <Row label="Name" value={info.node} />
-        <Row label="Location" value={info.location ?? "Unknown"} />
-      </Group>
-      <Group title="App">
-        <Row
-          label="Revision"
-          value={
-            info.revision ? (
-              <a
-                href={`https://github.com/bigint/k3s-yoginth-com/commit/${info.revision}`}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                {info.revision.slice(0, 7)}
-              </a>
-            ) : (
-              "Unknown"
-            )
-          }
-        />
-        <Row label="Uptime" value={formatDuration(info.uptime.process)} />
-        <Row
-          label="Memory"
-          value={`${formatMegabytes(info.memory.processUsed)}${limit ? ` of ${formatMegabytes(limit)}` : ""}`}
-        />
-      </Group>
-    </>
+    <Group title="App">
+      <Row
+        label="Revision"
+        value={
+          info.revision ? (
+            <a
+              href={`https://github.com/bigint/k3s-yoginth-com/commit/${info.revision}`}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {info.revision.slice(0, 7)}
+            </a>
+          ) : (
+            "Unknown"
+          )
+        }
+      />
+      <Row label="Uptime" value={formatDuration(info.uptime.process)} />
+      <Row
+        label="Memory"
+        value={`${formatMegabytes(info.memory.processUsed)}${limit ? ` of ${formatMegabytes(limit)}` : ""}`}
+      />
+    </Group>
   );
 };
 
@@ -115,13 +111,13 @@ const Page = async ({ searchParams }: PageProps) => {
   return (
     <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-5">
       <header className="mb-8">
-        <h1 className="text-base font-bold text-heading">k3s</h1>
+        <h1 className="font-title text-heading">k3s</h1>
       </header>
 
       <div className="flex flex-col gap-5">
         <p>
           Cloudflare sent you to{" "}
-          <strong className="font-bold text-heading">{self.info.node}</strong>.
+          <strong className="font-title text-heading">{self.info.node}</strong>.
           It picks the nearest connector, so this usually stays the same.
         </p>
         <p>
@@ -130,36 +126,39 @@ const Page = async ({ searchParams }: PageProps) => {
         </p>
       </div>
 
-      <section className="mt-10">
-        <h2 className={sectionLabelClassName}>Nodes</h2>
-        <nav aria-label="Nodes" className="mt-2">
+      <nav aria-labelledby="nodes-heading" className="mt-14">
+        <h2 className={sectionHeadingClassName} id="nodes-heading">
+          Nodes
+        </h2>
+        <ul className="mt-4 flex flex-col gap-5 sm:gap-4">
           {peers.map((peer) => {
             const isCurrent = peer.info.node === selected.info.node;
             return (
-              <Link
-                aria-current={isCurrent ? "page" : undefined}
-                className={`flex flex-wrap justify-between gap-x-6 border-t border-muted/20 py-2 no-underline first:border-t-0 ${isCurrent ? "font-bold text-heading" : ""}`}
-                href={`/?node=${encodeURIComponent(peer.info.node)}`}
-                key={peer.info.node}
-                prefetch={false}
-              >
-                <span>{peer.info.node}</span>
-                <span className="font-normal text-muted">
+              <li className={rowClassName} key={peer.info.node}>
+                <Link
+                  aria-current={isCurrent ? "page" : undefined}
+                  className="min-w-0 aria-[current=page]:font-title aria-[current=page]:text-heading aria-[current=page]:decoration-current"
+                  href={`/?node=${encodeURIComponent(peer.info.node)}`}
+                  prefetch={false}
+                >
+                  {peer.info.node}
+                </Link>
+                <span className="shrink-0 text-muted">
                   {peer.info.location ?? "Unknown location"}
                 </span>
-              </Link>
+              </li>
             );
           })}
-        </nav>
-      </section>
+        </ul>
+      </nav>
 
       {isMissing ? (
-        <p className="mt-5 text-accent">
+        <p className="mt-5 text-heading">
           That node isn’t available, so this shows the serving node.
         </p>
       ) : null}
       {unreachable > 0 ? (
-        <p className="mt-5 text-accent">
+        <p className="mt-5 text-heading">
           {unreachable === 1
             ? "1 pod did not respond"
             : `${unreachable} pods did not respond`}
@@ -167,7 +166,7 @@ const Page = async ({ searchParams }: PageProps) => {
         </p>
       ) : null}
 
-      <p className="mt-5 text-muted">
+      <p className="mt-6 text-muted">
         Showing {selected.info.node}
         {isSelf
           ? ", the node serving this page."
