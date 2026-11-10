@@ -19,8 +19,7 @@ export type NodeInfo = {
 const LOCATIONS: Record<string, string> = {
   "k3s-agfn-01": "AGFN server room, Bengaluru",
   "k3s-home-01": "Bengaluru, India",
-  "k3s-ovh-01": "OVH, Virginia, United States",
-  "k3s-ws-01": "Worldstream, Netherlands"
+  "k3s-ovh-01": "OVH, Virginia, United States"
 };
 
 function memoryLimit(): number | null {
