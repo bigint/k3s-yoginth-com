@@ -3,7 +3,6 @@
     "includes": [
       "app/**/*.{css,ts,tsx}",
       "lib/**/*.ts",
-      "proxy.ts",
       "next.config.ts",
       "*.{json,mjs}"
     ]
