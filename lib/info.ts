@@ -20,7 +20,8 @@ const LOCATIONS: Record<string, string> = {
   "k3s-agfn-01": "AGFN server room, Bengaluru",
   "k3s-home-01": "Bengaluru, India",
   "k3s-ovh-01": "OVH, Virginia, United States",
-  "k3s-ovh-02": "OVH, London, United Kingdom"
+  "k3s-ovh-02": "OVH, London, United Kingdom",
+  "k3s-ovh-03": "OVH, Singapore"
 };
 
 function memoryLimit(): number | null {
