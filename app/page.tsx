@@ -1,7 +1,6 @@
 import { headers } from "next/headers";
-import Link from "next/link";
 import type { ReactNode } from "react";
-import { getPeers, type Peer } from "@/lib/peers";
+import { getNodeInfo, type NodeInfo } from "@/lib/info";
 
 export const dynamic = "force-dynamic";
 
@@ -57,11 +56,10 @@ const Group = ({ children, title }: GroupProps) => {
 };
 
 interface DetailsProps {
-  peer: Peer;
+  info: NodeInfo;
 }
 
-const Details = ({ peer }: DetailsProps) => {
-  const { info } = peer;
+const Details = ({ info }: DetailsProps) => {
   const limit = info.memory.processLimit;
 
   return (
@@ -91,18 +89,9 @@ const Details = ({ peer }: DetailsProps) => {
   );
 };
 
-interface PageProps {
-  searchParams: Promise<{ node?: string | string[] }>;
-}
-
-const Page = async ({ searchParams }: PageProps) => {
-  const [{ node: requested }, requestHeaders, { peers, self, unreachable }] =
-    await Promise.all([searchParams, headers(), getPeers()]);
-
-  const selected = peers.find((peer) => peer.info.node === requested) ?? self;
-  const isMissing =
-    typeof requested === "string" && selected.info.node !== requested;
-  const isSelf = selected.info.node === self.info.node;
+const Page = async () => {
+  const requestHeaders = await headers();
+  const info = getNodeInfo();
 
   const ray = requestHeaders.get("cf-ray");
   const edge = ray?.split("-").pop() ?? null;
@@ -114,66 +103,14 @@ const Page = async ({ searchParams }: PageProps) => {
         <h1 className="font-title text-heading">k3s</h1>
       </header>
 
-      <div className="flex flex-col gap-5">
-        <p>
-          Cloudflare sent you to{" "}
-          <strong className="font-title text-heading">{self.info.node}</strong>.
-          It picks the nearest connector, so this usually stays the same.
-        </p>
-        <p>
-          Choose a node below to see its details, fetched from it over the
-          cluster network.
-        </p>
-      </div>
-
-      <nav aria-labelledby="nodes-heading" className="mt-14">
-        <h2 className={sectionHeadingClassName} id="nodes-heading">
-          Nodes
-        </h2>
-        <ul className="mt-4 flex flex-col gap-5 sm:gap-4">
-          {peers.map((peer) => {
-            const isCurrent = peer.info.node === selected.info.node;
-            return (
-              <li className={rowClassName} key={peer.info.node}>
-                <Link
-                  aria-current={isCurrent ? "page" : undefined}
-                  className="min-w-0 aria-[current=page]:font-title aria-[current=page]:text-heading aria-[current=page]:decoration-current"
-                  href={`/?node=${encodeURIComponent(peer.info.node)}`}
-                  prefetch={false}
-                >
-                  {peer.info.node}
-                </Link>
-                <span className="shrink-0 text-muted">
-                  {peer.info.location ?? "Unknown location"}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      {isMissing ? (
-        <p className="mt-5 text-heading">
-          That node isn’t available, so this shows the serving node.
-        </p>
-      ) : null}
-      {unreachable > 0 ? (
-        <p className="mt-5 text-heading">
-          {unreachable === 1
-            ? "1 pod did not respond"
-            : `${unreachable} pods did not respond`}
-          , so it may be missing from the list.
-        </p>
-      ) : null}
-
-      <p className="mt-6 text-muted">
-        Showing {selected.info.node}
-        {isSelf
-          ? ", the node serving this page."
-          : `, fetched by ${self.info.node} in ${selected.latencyMs} ms.`}
+      <p>
+        Cloudflare sent you to{" "}
+        <strong className="font-title text-heading">{info.node}</strong>
+        {info.location ? ` (${info.location})` : ""}. It picks the nearest
+        connector, so this usually stays the same.
       </p>
 
-      <Details peer={selected} />
+      <Details info={info} />
 
       <Group title="Your request">
         <Row label="Cloudflare edge" value={edge ?? "Not through Cloudflare"} />
