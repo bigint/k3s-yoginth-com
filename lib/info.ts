@@ -17,7 +17,7 @@ export type NodeInfo = {
 // already are, through x-served-by. Addresses, pod and namespace names, the
 // exact runtime version and host metrics are deliberately left out.
 const LOCATIONS: Record<string, string> = {
-  "k3s-afn-01": "AGFN server room, Bengaluru",
+  "k3s-afn-01": "AFN data center, Bengaluru",
   "k3s-home-01": "Bengaluru, India",
   "k3s-ovh-01": "OVH, Virginia, United States",
   "k3s-ovh-02": "OVH, London, United Kingdom",
