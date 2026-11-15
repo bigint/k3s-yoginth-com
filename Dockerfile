@@ -1,4 +1,4 @@
-FROM node:26.13.0-bookworm-slim AS build
+FROM node:26.13.1-bookworm-slim AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm install --global pnpm@12.18.0
@@ -9,7 +9,7 @@ ARG DEPLOYMENT_REVISION
 ENV NEXT_DEPLOYMENT_ID=$DEPLOYMENT_REVISION
 RUN test -n "$DEPLOYMENT_REVISION" && pnpm build
 
-FROM node:26.13.0-bookworm-slim AS runtime
+FROM node:26.13.1-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000 NEXT_TELEMETRY_DISABLED=1
 ARG DEPLOYMENT_REVISION
